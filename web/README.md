@@ -31,7 +31,7 @@ NEXT_PUBLIC_PUBLIC_API_PREFIX=http://localhost:5001/api
 # SENTRY
 NEXT_PUBLIC_SENTRY_DSN=
 ```
-
+2024-2-19
 Finally, run the development server:
 
 ```bash
