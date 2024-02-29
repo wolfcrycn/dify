@@ -62,6 +62,17 @@ class ApiTool(Tool):
             
             if 'api_key_value' not in credentials:
                 raise ToolProviderCredentialValidationError('Missing api_key_value')
+            elif not isinstance(credentials['api_key_value'], str):
+                raise ToolProviderCredentialValidationError('api_key_value must be a string')
+            
+            if 'api_key_header_prefix' in credentials:
+                api_key_header_prefix = credentials['api_key_header_prefix']
+                if api_key_header_prefix == 'basic':
+                    credentials['api_key_value'] = f'Basic {credentials["api_key_value"]}'
+                elif api_key_header_prefix == 'bearer':
+                    credentials['api_key_value'] = f'Bearer {credentials["api_key_value"]}'
+                elif api_key_header_prefix == 'custom':
+                    pass
             
             headers[api_key_header] = credentials['api_key_value']
 
@@ -127,6 +138,8 @@ class ApiTool(Tool):
                     value = parameters[parameter['name']]
                 elif parameter['required']:
                     raise ToolProviderCredentialValidationError(f"Missing required parameter {parameter['name']}")
+                else:
+                    value = (parameter.get('schema', {}) or {}).get('default', '')
                 path_params[parameter['name']] = value
 
             elif parameter['in'] == 'query':
@@ -135,6 +148,8 @@ class ApiTool(Tool):
                     value = parameters[parameter['name']]
                 elif parameter['required']:
                     raise ToolProviderCredentialValidationError(f"Missing required parameter {parameter['name']}")
+                else:
+                    value = (parameter.get('schema', {}) or {}).get('default', '')
                 params[parameter['name']] = value
 
             elif parameter['in'] == 'cookie':
@@ -143,6 +158,8 @@ class ApiTool(Tool):
                     value = parameters[parameter['name']]
                 elif parameter['required']:
                     raise ToolProviderCredentialValidationError(f"Missing required parameter {parameter['name']}")
+                else:
+                    value = (parameter.get('schema', {}) or {}).get('default', '')
                 cookies[parameter['name']] = value
 
             elif parameter['in'] == 'header':
@@ -151,6 +168,8 @@ class ApiTool(Tool):
                     value = parameters[parameter['name']]
                 elif parameter['required']:
                     raise ToolProviderCredentialValidationError(f"Missing required parameter {parameter['name']}")
+                else:
+                    value = (parameter.get('schema', {}) or {}).get('default', '')
                 headers[parameter['name']] = value
 
         # check if there is a request body and handle it
@@ -192,7 +211,7 @@ class ApiTool(Tool):
         
         # replace path parameters
         for name, value in path_params.items():
-            url = url.replace(f'{{{name}}}', value)
+            url = url.replace(f'{{{name}}}', f'{value}')
 
         # parse http body data if needed, for GET/HEAD/OPTIONS/TRACE, the body is ignored
         if 'Content-Type' in headers:
